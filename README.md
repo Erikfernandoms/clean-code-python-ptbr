@@ -1077,14 +1077,17 @@ class Employee:
         return self  # permite encadeamento, se desejado
 ```
 
-🆚 Herança vs Composição — Quando usar?
-Critério | Herança | Composição
-Relação "é um" (is-a) | ✅ Sim | ❌ Não
-Reutilização de comportamento | ✅ Mais direto  | 🔁 Possível via delegação
-Flexibilidade	 | ❌ Menor (acoplamento forte)	 | ✅ Maior (acoplamento fraco)
-Substituição de partes internas | ❌ Difícil | ✅ Fácil
-Manutenção em longo prazo | ⚠️ Mais delicada | ✅ Mais segura
-Polimorfismo | ✅ Natural | ❌ Exige interface explícita
+### 🆚 Herança vs Composição — Quando usar?
+
+| Critério                          | Herança                                | Composição                          |
+|-----------------------------------|----------------------------------------|-------------------------------------|
+| Relação "é um" (`is-a`)           | ✅ Sim                                 | ❌ Não                              |
+| Reutilização de comportamento     | ✅ Mais direto                         | 🔁 Possível via delegação           |
+| Flexibilidade                     | ❌ Menor (acoplamento forte)           | ✅ Maior (acoplamento fraco)        |
+| Substituição de partes internas   | ❌ Difícil                             | ✅ Fácil                             |
+| Manutenção em longo prazo         | ⚠️ Mais delicada                      | ✅ Mais segura                       |
+| Polimorfismo                      | ✅ Natural                             | ❌ Exige interface explícita         |
+
 
 **[⬆ voltar ao topo](#Índice)**
 
