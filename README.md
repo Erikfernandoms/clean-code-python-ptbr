@@ -1585,3 +1585,183 @@ Caso queira se aprofundar mais no tema, deixo disposto aqui 2 dos meus artigos, 
 [O que são testes unitários e como executá-los em Python](https://medium.com/itautech/o-que-são-testes-unitários-e-como-executá-los-em-python-4d4a1b780fd6)
 
 [Testes unitários em Python: como utilizar o Unittest e executá-los na AWS](https://medium.com/itautech/testes-unitários-em-python-como-utilizar-o-unittest-e-executá-los-na-aws-70d13193e42b)
+
+**[⬆ voltar ao topo](#Índice)**
+
+## **Concorrência**
+### Evite callbacks aninhados
+Aninhar callbacks em Python (por exemplo, com threading ou concurrent.futures) pode gerar um código difícil de ler, manter e depurar — o famoso “callback hell”.
+
+**Prefira asyncio com async/await**
+Desde o Python 3.5+, temos suporte nativo a programação assíncrona com async e await.
+Essa abordagem oferece:
+ - Código mais legível
+ - Concorrência eficiente com I/O
+ - Erro e exceção tratados de forma clara
+
+**Exemplo ruim com callbacks:**
+```python
+import requests
+
+def get_article():
+    try:
+        response = requests.get('https://en.wikipedia.org/wiki/Robert_Cecil_Martin')
+        write_file(response.text)
+    except Exception as e:
+        print(f"Erro ao fazer requisição: {e}")
+
+def write_file(content):
+    try:
+        with open('article.html', 'w') as f:
+            f.write(content)
+        print('Arquivo salvo.')
+    except Exception as e:
+        print(f"Erro ao salvar o arquivo: {e}")
+
+get_article()
+```
+🔴 Problemas:
+- Código bloqueante (não concorrente).
+- Difícil de escalar para múltiplas tarefas.
+
+**Exemplo bom com async/await (concorrente e limpo):**
+```python
+import aiohttp
+import aiofiles
+import asyncio
+
+async def fetch_article(url: str) -> str:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.text()
+
+async def write_to_file(filename: str, content: str):
+    async with aiofiles.open(filename, 'w') as f:
+        await f.write(content)
+    print('Arquivo salvo.')
+
+async def get_clean_code_article():
+    try:
+        content = await fetch_article('https://en.wikipedia.org/wiki/Robert_Cecil_Martin')
+        await write_to_file('article.html', content)
+    except Exception as e:
+        print(f"Ocorreu um erro: {e}")
+
+# Executa o programa assíncrono
+if __name__ == "__main__":
+    asyncio.run(get_clean_code_article())
+```
+🟢 Vantagens dessa abordagem:
+- Concorrência real de I/O (sem precisar de threads ou processos).
+- Código legível e sequencial.
+- Tratamento de exceções elegante.
+- Fácil de adaptar para tarefas paralelas (baixar vários arquivos, por exemplo).
+  
+**[⬆ voltar ao topo](#Índice)**
+
+## **Tratamento de Erros**
+
+### Não ignore exceções capturadas
+Capturar uma exceção e apenas imprimir ou ignorar sem tomar atitude real não ajuda a resolver ou reagir ao problema.
+
+**Tenha um plano ao capturar exceções**
+Se você usou try/except, você espera que algo possa dar errado — então, prepare o código para lidar com isso:
+- Exibir logs adequados com logging
+- Notificar o usuário (ex: UI, API, retorno)
+- Reportar para um serviço de monitoramento (Sentry, Bugsnag, etc)
+- Encerrar ou reverter operações, se necessário
+
+**Exemplo ruim:**
+```python
+try:
+    function_that_might_fail()
+except Exception as e:
+    print(e)
+```
+🔴 Problemas:
+- "print" pode ser perdido entre outros logs
+- Nenhuma reação real ao erro
+- Ignora o contexto e o impacto
+
+**Exemplo bom:**
+```python
+import logging
+
+def notify_user_of_error(error):
+    print(f"⚠️ Atenção: {error}")
+
+def report_error_to_service(error):
+    # Exemplo fictício de integração com serviço externo
+    logging.error(f"[ERROR REPORT] {str(error)}")
+
+try:
+    function_that_might_fail()
+except Exception as e:
+    logging.exception("Ocorreu um erro durante a execução:")
+    notify_user_of_error(e)
+    report_error_to_service(e)
+```
+🟢 Vantagens:
+- Usa logging (que pode registrar em arquivo, console, ou outros destinos configuráveis)
+- Reage ao erro com notificações ou relatórios
+- Mantém a rastreabilidade do problema com logging.exception(), que inclui o stack trace
+
+**[⬆ voltar ao topo](#Índice)**
+
+## **Formatação**
+
+### Formatação com Black
+**A Filosofia do Black**
+"Black is the uncompromising code formatter."
+O Black formata seu código Python de forma automática, consistente e padronizada, para que você e seu time nunca mais precisem discutir sobre estilo de código.
+
+**Não perca tempo discutindo estilo**
+Formatar manualmente ou discutir “qual estilo é melhor” (aspas simples vs. duplas, indentação, espaçamento, tamanho de linha...) é desperdício de tempo de engenharia.
+O Black segue um padrão claro baseado no PEP 8, com algumas decisões próprias para consistência.
+Use-o como parte do seu workflow (pré-commit, CI, editor) e esqueça os debates.
+
+**Como usar Black**
+Exemplo de uso:
+```bash
+black meu_arquivo.py
+```
+
+**Exemplo de código mal formatado:**
+```python
+def  soma ( a,b ) :
+  return   a+b
+
+def multiplicar( x ,y):return x*y
+
+class animal:pass
+
+class   alpaca:
+ def falar(self): print("meh")
+```
+
+**Exemplo bom com Black:**
+```python
+def soma(a, b):
+    return a + b
+
+def multiplicar(x, y):
+    return x * y
+
+class Animal:
+    pass
+
+class Alpaca:
+    def falar(self):
+        print("meh")
+```
+
+**Convenções automáticas que o Black aplica:**
+- 4 espaços de indentação (sem tab)
+- Linhas com até 88 caracteres
+- Aspas duplas preferidas ("texto" em vez de 'texto')
+- Linhas em branco consistentes
+- Remoção de espaços desnecessários
+- Funções e classes bem espaçadas
+- Chaves e listas multiline formatadas verticalmente
+
+**[⬆ voltar ao topo](#Índice)**
