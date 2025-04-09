@@ -13,8 +13,7 @@ Repositório original: [ryanmcdermott/clean-code-javascript](https://github.com/
   8. [Concorrência](#concorrência)
   9. [Tratamento de Erros](#tratamento-de-erros)
   10. [Formatação](#formatação)
-  11. [Comentários](#comentários)
-  12. [Traduções](#traduções)
+  11. [Code-Review](#code-review)
 
 ## Introdução
 ![Imagem humorística da estimativa de qualidade do software baseado na contagem de quantos palavrões você gritou enquanto lia o código.](http://www.osnews.com/images/comics/wtfm.jpg)
@@ -1755,7 +1754,7 @@ class Alpaca:
         print("meh")
 ```
 
-**Convenções automáticas que o Black aplica:**
+**Convenções automáticas que o Black aplica (O Black se baseia em **[PEP 8](https://peps.python.org/pep-0008/)** — o guia oficial de estilo de código Python —, porém com algumas decisões próprias para garantir legibilidade e consistência): **
 - 4 espaços de indentação (sem tab)
 - Linhas com até 88 caracteres
 - Aspas duplas preferidas ("texto" em vez de 'texto')
@@ -1763,5 +1762,93 @@ class Alpaca:
 - Remoção de espaços desnecessários
 - Funções e classes bem espaçadas
 - Chaves e listas multiline formatadas verticalmente
+
+**[⬆ voltar ao topo](#Índice)**
+
+## **Code-Review**
+
+### Extra:  Code Review em Python – Guia Prático
+
+Este guia foi criado com base em princípios de **Clean Code**, **SOLID**, **testes automatizados**, **concorrência moderna**, **tratamento de erros** e **formatação**. Ele serve como **checklist rápido e objetivo** para engenheiros que participam de revisões de código (code reviews) em projetos Python.
+
+---
+
+### ✅ Checklist Geral
+
+#### 📌 1. Legibilidade e Clareza
+- Nomes de variáveis, funções e classes são descritivos?
+- O código pode ser compreendido sem contexto externo?
+- Comentários são usados apenas onde realmente agregam?
+
+#### 📌 2. Responsabilidade Única (SRP)
+- Cada função ou classe faz **apenas uma coisa**?
+- Alguma função está muito longa ou com múltiplas responsabilidades?
+- É possível extrair blocos em funções auxiliares?
+
+#### 📌 3. Design e Arquitetura (SOLID)
+- O código segue princípios como **OCP**, **DIP** e **ISP**?
+- Existem `if` ou `match/case` que poderiam ser substituídos por polimorfismo?
+- Há dependência direta de classes concretas (em vez de abstrações)?
+
+#### 📌 4. Tratamento de Erros
+- Exceções estão sendo capturadas corretamente?
+- Há `try/except` sem tratamento real (ex: `pass`, `print`)?
+- Logs são úteis e acionáveis?
+- Há possibilidade de notificar ou relatar erros?
+
+#### 📌 5. Testes
+- O que está sendo testado tem cobertura adequada?
+- Cada teste cobre **um comportamento específico**?
+- Testes são fáceis de entender e manter?
+- Ferramentas como `pytest`, `coverage` ou `tox` estão sendo usadas?
+
+#### 📌 6. Concorrência (se aplicável)
+- Uso correto de `async/await`, `aiohttp`, `aiofiles`, `asyncio.run()`?
+- Erros assíncronos são tratados adequadamente?
+- Operações de I/O estão devidamente otimizadas?
+
+#### 📌 7. Formatação e Estilo
+- O código está formatado com [**Black**](https://black.readthedocs.io)?
+- Convenções de capitalização estão sendo seguidas (`snake_case`, `PascalCase`, `UPPER_CASE`)?
+- Não há código comentado ou duplicado?
+
+#### 📌 8. Boas Práticas Gerais
+- O código introduz efeitos colaterais inesperados?
+- Existe repetição ou lógica duplicada?
+- Funções recebem mais parâmetros do que o necessário?
+- Alguma abstração está prematura ou desnecessária?
+
+---
+
+### 🧠 Dicas para Comentários de Code Review
+
+- Comente **com empatia** — o foco é no código, nunca na pessoa.
+- Seja **específico e claro** nas sugestões.
+- Prefira comentários que **ensinam** ou mostram um caminho melhor.
+- Valide e incentive boas decisões de design!
+
+#### ✅ Exemplos de comentários úteis
+
+| Tipo        | Comentário Exemplo |
+|-------------|---------------------|
+| ❌ Crítica construtiva | "Essa função parece estar fazendo duas coisas distintas. Podemos separá-las para respeitar o SRP?" |
+| 💡 Sugestão | "Que tal usar `@property` aqui para proteger esse atributo?" |
+| ✅ Validação | "Boa implementação do padrão de injeção de dependência com abstrações! 👏" |
+| ⚠️ Alerta | "Esse `try/except` está apenas com `print` — podemos logar ou notificar corretamente?" |
+
+---
+
+### 📚 Recursos Recomendados
+
+- [PEP 8 – Guia de Estilo do Python](https://peps.python.org/pep-0008/)
+- [Black – Code Formatter](https://black.readthedocs.io)
+- [pytest – Testes em Python](https://docs.pytest.org/)
+
+---
+
+### Lembre-se:
+
+- **Code review é uma colaboração.**  
+- Não é sobre julgar. É sobre crescer — como time, como engenheiro, e como código.  
 
 **[⬆ voltar ao topo](#Índice)**
