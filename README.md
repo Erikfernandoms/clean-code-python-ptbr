@@ -767,6 +767,7 @@ for item in items:
 ✅ Vantagens:
 - Mais simples e eficiente.
 - Evita código desnecessário.
+  
 **[⬆ voltar ao topo](#Índice)**
 
 ### Remova código morto
@@ -796,6 +797,7 @@ inventory_tracker("apples", req, "www.inventory-awesome.io")
 ```
 ✅ Vantagens:
 - Código mais limpo e fácil de manter.
+  
 **[⬆ voltar ao topo](#Índice)**
 
 ## **Objetos e Estruturas de Dados**
@@ -857,13 +859,15 @@ account = BankAccount()
 account.balance = 100  # usa setter com validação por baixo dos panos
 print(account.balance)  # usa getter
 ```
+
 **[⬆ voltar ao topo](#Índice)**
 
-**Objetos devem ter membros privados**
+### Objetos devem ter membros privados
+
 No Python, não existem membros verdadeiramente privados como em outras linguagens, mas convenciona-se que atributos precedidos por um sublinhado (_) são considerados "privados". Para proteção mais forte, você pode usar dois sublinhados (__), que ativa name mangling.
 
 
-❌ Ruim:
+**Ruim:**
 ```python
 class Employee:
     def __init__(self, name):
@@ -879,7 +883,7 @@ del employee.name
 print(f"Employee name: {employee.get_name()}")  # Erro: atributo removido
 ```
 
-✅ Bom:
+**Bom:**
 ```python
 class Employee:
     def __init__(self, name):
@@ -896,9 +900,12 @@ del employee.__dict__["_Employee__name"]
 print(f"Employee name: {employee.get_name()}")  # Ainda funciona, se não deletado forçadamente
 Se quiser impedir totalmente modificação externa, evite expor qualquer forma de set_name. Ou use @property com um getter apenas.
 ```
+
+**[⬆ voltar ao topo](#Índice)**
+
 ## **Classes**
 
-###Prefira classes modernas e claras
+### Prefira classes modernas e claras
 
 Evite herança confusa e hierarquias difíceis de seguir. Use a sintaxe limpa e moderna das classes em Python. Comece com funções simples e só crie classes quando realmente necessário.
 
@@ -960,3 +967,621 @@ class Human(Mammal):
         pass
 ```
 Esse é o padrão de herança limpa e simples no Python — claro, direto e fácil de manter.
+
+**[⬆ voltar ao topo](#Índice)**
+
+### Use encadeamento de métodos
+
+Esse padrão torna o código mais fluido, expressivo e elegante. Embora seja mais comum em linguagens como JavaScript, ele pode ser implementado em Python retornando self ao final de cada método da classe.
+
+**Ruim (sem encadeamento):**
+```python
+class Car:
+    def __init__(self, make, model, color):
+        self.make = make
+        self.model = model
+        self.color = color
+
+    def set_make(self, make):
+        self.make = make
+
+    def set_model(self, model):
+        self.model = model
+
+    def set_color(self, color):
+        self.color = color
+
+    def save(self):
+        print(self.make, self.model, self.color)
+
+car = Car("Ford", "F-150", "red")
+car.set_color("pink")
+car.save()
+```
+
+**Bom (com encadeamento):**
+```python
+class Car:
+    def __init__(self, make, model, color):
+        self.make = make
+        self.model = model
+        self.color = color
+
+    def set_make(self, make):
+        self.make = make
+        return self  # permite encadeamento
+
+    def set_model(self, model):
+        self.model = model
+        return self
+
+    def set_color(self, color):
+        self.color = color
+        return self
+
+    def save(self):
+        print(self.make, self.model, self.color)
+        return self
+
+car = Car("Ford", "F-150", "red")\
+    .set_color("pink")\
+    .set_model("Raptor")\
+    .save()
+```
+✅ Vantagens do encadeamento de métodos em Python:
+- Mais legível e conciso: reduz a repetição do nome do objeto.
+- Expressivo: o código se aproxima de uma linguagem fluente, quase como uma DSL (Domain Specific Language).
+- Bom para builders e objetos configuráveis: útil em APIs que montam configurações ou processos passo a passo.
+
+⚠️ Desvantagens e cuidados:
+- Debug mais difícil: em chamadas longas encadeadas, localizar qual método causou um erro pode ser mais difícil.
+- Dificulta a quebra de linha lógica se não bem formatado.
+- Pode incentivar métodos que fazem mais de uma coisa, quebrando o Single Responsibility Principle se não for bem usado.
+- Nem sempre é idiomático no Python: o estilo funcional ou declarativo é preferido em algumas situações.
+  
+**[⬆ voltar ao topo](#Índice)**
+
+### Prefira composição ao invés de herança
+
+Em Python, como em outras linguagens, a composição costuma ser mais flexível e segura do que a herança. Ela permite trocar implementações mais facilmente e evita o acoplamento excessivo entre classes.
+
+**Ruim (herança onde não faz sentido):**
+```python
+class Employee:
+    def __init__(self, name, email):
+        self.name = name
+        self.email = email
+
+# ERRADO: EmployeeTaxData não é um tipo de Employee
+class EmployeeTaxData(Employee):
+    def __init__(self, ssn, salary):
+        super().__init__(name=None, email=None)
+        self.ssn = ssn
+        self.salary = salary
+```
+
+**Bom (composição):**
+```python
+class EmployeeTaxData:
+    def __init__(self, ssn, salary):
+        self.ssn = ssn
+        self.salary = salary
+
+class Employee:
+    def __init__(self, name, email):
+        self.name = name
+        self.email = email
+        self.tax_data = None
+
+    def set_tax_data(self, ssn, salary):
+        self.tax_data = EmployeeTaxData(ssn, salary)
+        return self  # permite encadeamento, se desejado
+```
+
+🆚 Herança vs Composição — Quando usar?
+Critério | Herança | Composição
+Relação "é um" (is-a) | ✅ Sim | ❌ Não
+Reutilização de comportamento | ✅ Mais direto  | 🔁 Possível via delegação
+Flexibilidade	 | ❌ Menor (acoplamento forte)	 | ✅ Maior (acoplamento fraco)
+Substituição de partes internas | ❌ Difícil | ✅ Fácil
+Manutenção em longo prazo | ⚠️ Mais delicada | ✅ Mais segura
+Polimorfismo | ✅ Natural | ❌ Exige interface explícita
+
+**[⬆ voltar ao topo](#Índice)**
+
+## **SOLID**
+### Princípio da Responsabilidade Única (SRP)
+Como dito em Código Limpo, "Nunca deveria haver mais de um motivo para uma classe ter que mudar". É tentador empacotar uma classe em excesso com muitas funcionalidades, como quando você pode levar apenas uma mala em seu voo. O problema com isso é que sua classe não será conceitualmente coesa e dar-lhe-á diversos motivos para mudá-la. Minimizar o número de vezes que você precisa mudar uma classe é importante, porque, se muitas funcionalidades estão em uma classe e você mudar uma porção dela, pode ser difícil entender como isto afetará outros módulos que dependem dela no seu código.
+
+**Exemplo Ruim (violando SRP):**
+```python
+class UserSettings:
+    def __init__(self, user):
+        self.user = user
+
+    def change_settings(self, settings):
+        if self.verify_credentials():
+            # aplica as configurações
+            pass
+
+    def verify_credentials(self):
+        # lógica de autenticação do usuário
+        pass
+```
+Essa classe faz duas coisas diferentes:
+1. Verifica credenciais (responsabilidade de segurança/autenticação)
+2. Altera configurações (responsabilidade de preferências ou dados do usuário)
+
+**Exemplo Bom (aplicando SRP):**
+```python
+class UserAuth:
+    def __init__(self, user):
+        self.user = user
+
+    def verify_credentials(self):
+        # lógica de autenticação
+        return True  # exemplo
+python
+```
+```python
+class UserSettings:
+    def __init__(self, user, auth: UserAuth):
+        self.user = user
+        self.auth = auth
+
+    def change_settings(self, settings):
+        if self.auth.verify_credentials():
+            # aplica as configurações
+            print(f"Configurações aplicadas para {self.user}")
+```
+**Uso:**
+```python
+auth = UserAuth(user="alice")
+settings = UserSettings(user="alice", auth=auth)
+settings.change_settings({"theme": "dark"})
+```
+✅ Vantagens de aplicar SRP:
+- Facilidade de manutenção
+- Reutilização
+- Testabilidade
+- Menor acoplamento
+  
+**[⬆ voltar ao topo](#Índice)**
+
+### Princípio do Aberto/Fechado (OCP)
+Como foi dito por Bertrand Meyer, "entidades de software (classes, módulos, funções, etc.) devem se manter abertas para extensões, mas fechadas para modificações." Mas o que isso significa? Esse princípio basicamente diz que você deve permitir que usuários adicionem novas funcionalidades sem mudar código já existente.
+
+Esse princípio é essencial para garantir que, à medida que o sistema cresce, possamos adicionar novas funcionalidades sem alterar código existente (evitando bugs em partes já testadas).
+
+**Exemplo Ruim (violando OCP):**
+```python
+class HttpRequester:
+    def __init__(self, adapter_name):
+        self.adapter_name = adapter_name
+
+    def fetch(self, url):
+        if self.adapter_name == 'ajaxAdapter':
+            return self._make_ajax_call(url)
+        elif self.adapter_name == 'httpNodeAdapter':
+            return self._make_http_call(url)
+
+    def _make_ajax_call(self, url):
+        # Simulando uma chamada AJAX
+        print(f"Fetching via AJAX: {url}")
+        return f"Response from AJAX: {url}"
+
+    def _make_http_call(self, url):
+        # Simulando uma chamada HTTP via Node
+        print(f"Fetching via HTTP: {url}")
+        return f"Response from HTTP: {url}"
+```
+🛑 Para adicionar um novo tipo de adapter, é necessário alterar HttpRequester.fetch(), o que quebra o OCP.
+
+**Exemplo Bom (seguindo OCP):**
+```python
+from abc import ABC, abstractmethod
+
+class Adapter(ABC):
+    @abstractmethod
+    def request(self, url):
+        pass
+```
+
+```python
+class AjaxAdapter(Adapter):
+    def request(self, url):
+        print(f"Fetching via AJAX: {url}")
+        return f"Response from AJAX: {url}"
+```
+
+```python
+class NodeAdapter(Adapter):
+    def request(self, url):
+        print(f"Fetching via Node HTTP: {url}")
+        return f"Response from HTTP: {url}"
+```
+
+```python
+class HttpRequester:
+    def __init__(self, adapter: Adapter):
+        self.adapter = adapter
+
+    def fetch(self, url):
+        return self.adapter.request(url)
+```
+
+**Uso:**
+```python
+adapter = AjaxAdapter()
+requester = HttpRequester(adapter)
+response = requester.fetch("https://api.exemplo.com")
+print(response)
+```
+✅ Vantagens de aplicar OCP:
+- Facilidade de extensão, basta criar uma nova subclasse de Adapter.
+- Menor risco de bugs já que o código existente permanece intacto.
+- Alta coesão, cada classe lida com um único tipo de requisição.
+- Reutilização
+  
+⚠️ Dicas para aplicar OCP em Python:
+- Use classes base abstratas (abc.ABC) para definir contratos claros.
+- Use injeção de dependência: passe objetos ao invés de instanciá-los internamente.
+= Evite if-elif-else para decidir comportamentos com base em tipos — isso sempre sinaliza que o código pode ser melhorado com polimorfismo.
+
+**[⬆ voltar ao topo](#Índice)**
+
+### Princípio de Substituição de Liskov (LSP)
+
+Esse é um termo assustador para um conceito extremamente simples. É formalmente definido como “Se S é um subtipo de T, então objetos do tipo T podem ser substituídos por objetos com o tipo S (i.e., objetos do tipo S podem substituir objetos do tipo T) sem alterar nenhuma das propriedades desejáveis de um programa (corretude, desempenho em tarefas, etc.).” Esta é uma definição ainda mais assustadora.
+
+Em termos simples: toda subclasse deve poder ser usada no lugar da superclasse sem que o comportamento seja quebrado.
+
+**Exemplo Ruim (violando LSP):**
+```python
+class Bird:
+    def fly(self):
+        print("Voando alto!")
+
+class Ostrich(Bird):
+    def fly(self):
+        raise Exception("Avestruzes não podem voar!")
+```
+
+**Uso:**
+```python
+def make_bird_fly(bird: Bird):
+    bird.fly()
+
+bird1 = Bird()
+bird2 = Ostrich()
+
+make_bird_fly(bird1)  # Ok
+make_bird_fly(bird2)  # 💥 Vai lançar exceção!
+```
+🛑 Isso quebra o LSP, pois Ostrich não é realmente substituível por Bird se não suporta o mesmo comportamento (voar).
+
+**Exemplo Bom (respeitando LSP):**
+
+1. Criamos uma abstração mais precisa:
+```python
+from abc import ABC, abstractmethod
+
+class Bird(ABC):
+    @abstractmethod
+    def make_sound(self):
+        pass
+```
+
+2. Criamos uma interface separada para aves que voam:
+```python
+class FlyingBird(Bird):
+    @abstractmethod
+    def fly(self):
+        pass
+```
+
+3. Subclasses especializadas:
+```python
+class Parrot(FlyingBird):
+    def fly(self):
+        print("O papagaio está voando!")
+
+    def make_sound(self):
+        print("Squawk!")
+
+class Ostrich(Bird):
+    def make_sound(self):
+        print("GRRUUUN!")
+```
+4. Funções específicas:
+```python
+def make_it_fly(bird: FlyingBird):
+    bird.fly()
+
+def play_bird_sound(bird: Bird):
+    bird.make_sound()
+```
+**Uso correto:**
+```python
+parrot = Parrot()
+ostrich = Ostrich()
+
+make_it_fly(parrot)       # Funciona
+play_bird_sound(parrot)   # Funciona
+play_bird_sound(ostrich)  # Funciona
+# make_it_fly(ostrich)    # 🚫 Não permitido! Ostrich não é FlyingBird
+```
+
+✅ Vantagens de aplicar LSP:
+- Previsibilidade: Subclasses não surpreendem o código que as usa.
+- Facilidade de manutenção: Menos bugs relacionados à herança inadequada.
+- Testes mais simples: Substituições funcionam como esperado.
+- Design robusto: Separação clara de capacidades entre tipos semelhantes.
+  
+⚠️ Dica prática:
+Se uma subclasse precisa sobrescrever um método da superclasse para desativar ou levantar exceções, isso é um sinal claro de violação do LSP. Provavelmente o design precisa ser repensado.
+
+**[⬆ voltar ao topo](#Índice)**
+
+### Princípio da Segregação de Interface (ISP)
+ISP diz que "Clientes não devem ser forcados a depender de interfaces que eles não usam."
+
+Em vez de criar interfaces grandes e genéricas, crie interfaces pequenas e específicas, focadas em responsabilidades isoladas.
+Assim, as classes que implementam essas interfaces só precisam se preocupar com o que realmente fazem.
+
+**Exemplo Ruim (violando ISP):**
+```python
+from abc import ABC, abstractmethod
+
+class Worker(ABC):
+    @abstractmethod
+    def work(self):
+        pass
+
+    @abstractmethod
+    def eat(self):
+        pass
+```
+```python
+class HumanWorker(Worker):
+    def work(self):
+        print("Trabalhando...")
+
+    def eat(self):
+        print("Comendo...")
+```
+```python
+class RobotWorker(Worker):
+    def work(self):
+        print("Trabalhando...")
+
+    def eat(self):
+        raise NotImplementedError("Robôs não comem!")
+```
+🔴 Problema: A RobotWorker foi forçada a implementar o método eat(), mesmo não precisando dele. Isso quebra o ISP.
+
+**Exemplo Bom (respeitando ISP):**
+1. Dividimos em interfaces específicas:
+```python
+class Workable(ABC):
+    @abstractmethod
+    def work(self):
+        pass
+
+class Eatable(ABC):
+    @abstractmethodmethod
+    def eat(self):
+        pass
+```
+
+2. Classes implementam somente o necessário:
+```python
+class HumanWorker(Workable, Eatable):
+    def work(self):
+        print("Humano trabalhando...")
+
+    def eat(self):
+        print("Humano comendo...")
+
+class RobotWorker(Workable):
+    def work(self):
+        print("Robô trabalhando...")
+```
+
+3. Funções que esperam comportamentos específicos:
+```python
+def manage_work(worker: Workable):
+    worker.work()
+
+def manage_lunch(worker: Eatable):
+    worker.eat()
+```
+
+**Uso:**
+```python
+human = HumanWorker()
+robot = RobotWorker()
+
+manage_work(human)   # Ok
+manage_work(robot)   # Ok
+
+manage_lunch(human)  # Ok
+# manage_lunch(robot) # 🚫 Erro! Robôs não comem e nem implementam Eatable
+```
+✅ Vantagens do ISP:
+- Classes mais simples, implementam só o necessário
+- Alta coesão e baixo acoplamento, ou seja, menos dependências e responsabilidades
+- Facilidade para testar e manter, menos código "morto" ou não utilizado
+- Maior reutilização, com interfaces menores se encaixam melhor em outros contextos
+  
+**[⬆ voltar ao topo](#Índice)**
+
+### Princípio da Inversão de Dependência  (DIP)
+
+Este princípio nos diz duas coisas essenciais:
+ - Alto nível: regras de negócio (o que o sistema faz).
+ - Baixo nível: implementações (como o sistema faz).
+
+Ao invés de um módulo de alto nível depender de um de baixo nível diretamente, ambos devem depender de interfaces/abstrações.
+
+**Exemplo Ruim (violando DIP):**
+```python
+class MySQLDatabase:
+    def connect(self):
+        print("Conectando ao MySQL...")
+
+class UserRepository:
+    def __init__(self):
+        self.db = MySQLDatabase()  # 🔴 Alta dependência da implementação concreta
+
+    def get_user(self, user_id):
+        self.db.connect()
+        print(f"Buscando usuário {user_id}")
+```
+🔴 Problema: UserRepository está acoplado diretamente ao MySQL. Se mudar para PostgreSQL ou SQLite, você terá que editar essa classe — e isso fere o princípio do aberto/fechado (OCP) também.
+
+**Exemplo Bom (seguindo DIP):**
+1. Criamos uma abstração (interface):
+```python
+from abc import ABC, abstractmethod
+
+class Database(ABC):
+    @abstractmethod
+    def connect(self):
+        pass
+```
+2. Implementações específicas:
+```python
+class MySQLDatabase(Database):
+    def connect(self):
+        print("Conectando ao MySQL...")
+
+class PostgresDatabase(Database):
+    def connect(self):
+        print("Conectando ao PostgreSQL...")
+```
+3. Módulo de alto nível depende da abstração:
+```python
+class UserRepository:
+    def __init__(self, db: Database):
+        self.db = db  # ✅ Depende da abstração
+
+    def get_user(self, user_id):
+        self.db.connect()
+        print(f"Buscando usuário {user_id}")
+```
+4. Injetando a dependência:
+```python
+mysql = MySQLDatabase()
+repo_mysql = UserRepository(mysql)
+repo_mysql.get_user(42)
+
+postgres = PostgresDatabase()
+repo_postgres = UserRepository(postgres)
+repo_postgres.get_user(99)
+```
+✅ Vantagens do DIP:
+- Código desacoplado: Mudanças em implementações concretas não afetam o alto nível
+- Facilidade para testes: Pode-se facilmente usar mocks ou stubs
+- Alta flexibilidade/extensibilidade: Trocar banco, API, serviço, etc., sem quebrar o sistema
+- Melhor manutenção:O código evolui com mais segurança e clareza
+
+⚠️ Dica prática:
+Você pode implementar DIP em Python sem frameworks complexos, apenas passando dependências via construtor ou métodos. Para sistemas maiores, frameworks como **FastAPI, Django ou Flask** permitem injeção de dependência com containers, mas o conceito é o mesmo.
+
+**[⬆ voltar ao topo](#Índice)**
+
+## **Testes**
+Testes são mais importantes que entregas.
+Se você não tem testes (ou tem testes ruins), você nunca saberá com confiança se quebrou algo ao fazer mudanças.
+
+**O objetivo dos testes:**
+- Confiança no que está sendo entregue.
+- Manutenibilidade com menos risco.
+- Paz de espírito para refatorar ou adicionar novas funcionalidades.
+- Mesmo que seu time não exija cobertura de 100%, uma cobertura ampla e significativa é essencial.
+
+✅ Ferramentas recomendadas para testes em Python
+Testes:
+  - pytest – simples, poderoso e altamente extensível.
+  - unittest – built-in no Python.
+
+Cobertura:
+  - coverage.py – mede e reporta a cobertura de código.
+
+**Não existe desculpa para não escrever testes.**
+Você pode escolher o estilo que mais se adequa ao seu time: TDD (Test-Driven Development), BDD (Behavior-Driven Development) ou apenas escrever testes antes de entregar.
+O mais importante é:
+  **Nunca entregue código sem cobertura adequada**
+
+### Um conceito por teste
+Cada teste deve validar apenas um comportamento específico. Isso torna os testes:
+  - Mais legíveis
+  - Mais fáceis de manter
+  - Mais rápidos para depurar
+
+**Exemplo Ruim:**
+```python
+def test_user_settings():
+    user = User("Alice")
+    auth = Auth(user)
+    assert auth.verify_credentials()
+    
+    settings = Settings(user)
+    settings.change_theme("dark")
+    assert settings.theme == "dark"
+```
+🟥 Problemas:
+ - Testa duas coisas ao mesmo tempo: autenticação e mudança de tema.
+ - Se falhar, não fica claro o que quebrou.
+
+**Exemplo Bom:**
+```python
+def test_verify_credentials_valid_user():
+    user = User("Alice", password="123")
+    auth = Auth(user)
+    assert auth.verify_credentials() is True
+
+
+def test_change_theme_updates_setting():
+    user = User("Alice")
+    settings = Settings(user)
+    settings.change_theme("dark")
+    assert settings.theme == "dark"
+```
+
+🟩 Vantagens:
+- Cada teste cobre apenas um comportamento.
+- Fica fácil entender, depurar e manter.
+
+**Cobertura de Testes**
+Use coverage.py com pytest:
+```bash
+coverage run -m pytest
+coverage report -m
+coverage html  # Gera um relatório visual
+```
+
+
+**Dica: organize seus testes**
+Estrutura recomendada de projeto:
+
+```markdown
+my_project/
+├── app/
+│   ├── __init__.py
+│   ├── core.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_core.py
+```
+E dentro de cada test_*.py, foque em:
+ - Testes unitários
+ - Testes de integração (com dependências reais ou mocks)
+ - Testes funcionais (simulando uso real do sistema)
+
+Caso queira se aprofundar mais no tema, deixo disposto aqui 2 dos meus artigos, focados em testes:
+
+[O que são testes unitários e como executá-los em Python](https://medium.com/itautech/o-que-são-testes-unitários-e-como-executá-los-em-python-4d4a1b780fd6)
+
+[Testes unitários em Python: como utilizar o Unittest e executá-los na AWS](https://medium.com/itautech/testes-unitários-em-python-como-utilizar-o-unittest-e-executá-los-na-aws-70d13193e42b)
