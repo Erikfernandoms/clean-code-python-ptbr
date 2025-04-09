@@ -798,3 +798,165 @@ inventory_tracker("apples", req, "www.inventory-awesome.io")
 - Código mais limpo e fácil de manter.
 **[⬆ voltar ao topo](#Índice)**
 
+## **Objetos e Estruturas de Dados**
+### Use getters e setters
+
+Utilizar getters e setters para acessar dados de objetos é muito melhor do que simplesmente acessar diretamente os atributos. “Por quê?”, você pode perguntar. Aqui vai uma lista desorganizada de motivos:
+1. Quando você quiser fazer mais do que apenas acessar um atributo, não precisará mudar todo o código que acessa esse dado;
+2. Facilita a validação ao definir (set) valores;
+3. Encapsula a representação interna do objeto;
+4. Facilita a adição de logs e tratamento de erros nos acessos;
+5. Permite o uso de lazy loading, como buscar a propriedade sob demanda de um servidor, por exemplo.
+
+**Ruim**:
+```python
+class BankAccount:
+    def __init__(self):
+        self.balance = 0
+
+account = BankAccount()
+account.balance = 100  # acesso direto, sem validação ou encapsulamento
+```
+
+**Bom:**
+```python
+class BankAccount:
+    def __init__(self):
+        self._balance = 0  # atributo privado
+
+    def get_balance(self):
+        return self._balance
+
+    def set_balance(self, amount):
+        if amount < 0:
+            raise ValueError("O saldo não pode ser negativo.")
+        # aqui você poderia adicionar logs ou chamadas externas
+        self._balance = amount
+
+account = BankAccount()
+account.set_balance(100)
+
+```
+**Se quiser deixar ainda mais pythonico, você pode usar a propriedade @property:**
+```python
+class BankAccount:
+    def __init__(self):
+        self._balance = 0
+
+    @property
+    def balance(self):
+        return self._balance
+
+    @balance.setter
+    def balance(self, amount):
+        if amount < 0:
+            raise ValueError("O saldo não pode ser negativo.")
+        self._balance = amount
+
+account = BankAccount()
+account.balance = 100  # usa setter com validação por baixo dos panos
+print(account.balance)  # usa getter
+```
+**[⬆ voltar ao topo](#Índice)**
+
+**Objetos devem ter membros privados**
+No Python, não existem membros verdadeiramente privados como em outras linguagens, mas convenciona-se que atributos precedidos por um sublinhado (_) são considerados "privados". Para proteção mais forte, você pode usar dois sublinhados (__), que ativa name mangling.
+
+
+❌ Ruim:
+```python
+class Employee:
+    def __init__(self, name):
+        self.name = name  # atributo público
+
+    def get_name(self):
+        return self.name
+
+employee = Employee("John Doe")
+print(f"Employee name: {employee.get_name()}")  # Employee name: John Doe
+
+del employee.name
+print(f"Employee name: {employee.get_name()}")  # Erro: atributo removido
+```
+
+✅ Bom:
+```python
+class Employee:
+    def __init__(self, name):
+        self.__name = name  # atributo privado com name mangling
+
+    def get_name(self):
+        return self.__name
+
+employee = Employee("John Doe")
+print(f"Employee name: {employee.get_name()}")  # Employee name: John Doe
+
+# Tentativa de deletar o atributo não afeta o valor real protegido
+del employee.__dict__["_Employee__name"]
+print(f"Employee name: {employee.get_name()}")  # Ainda funciona, se não deletado forçadamente
+Se quiser impedir totalmente modificação externa, evite expor qualquer forma de set_name. Ou use @property com um getter apenas.
+```
+## **Classes**
+
+###Prefira classes modernas e claras
+
+Evite herança confusa e hierarquias difíceis de seguir. Use a sintaxe limpa e moderna das classes em Python. Comece com funções simples e só crie classes quando realmente necessário.
+
+**Ruim (imitando herança estilo "manual" ou excessivamente verboso):**
+```python
+class Animal:
+    def __init__(self, age):
+        if not isinstance(self, Animal):
+            raise TypeError("Use a classe corretamente")
+        self.age = age
+
+    def move(self):
+        pass
+
+class Mammal(Animal):
+    def __init__(self, age, fur_color):
+        super().__init__(age)
+        self.fur_color = fur_color
+
+    def live_birth(self):
+        pass
+
+class Human(Mammal):
+    def __init__(self, age, fur_color, language_spoken):
+        super().__init__(age, fur_color)
+        self.language_spoken = language_spoken
+
+    def speak(self):
+        pass
+```
+Apesar de não estar "errado", esse estilo tenta recriar proteções desnecessárias.
+
+**Bom:**
+```python
+class Animal:
+    def __init__(self, age):
+        self.age = age
+
+    def move(self):
+        # lógica de movimento
+        pass
+
+class Mammal(Animal):
+    def __init__(self, age, fur_color):
+        super().__init__(age)
+        self.fur_color = fur_color
+
+    def live_birth(self):
+        # lógica de nascimento vivo
+        pass
+
+class Human(Mammal):
+    def __init__(self, age, fur_color, language_spoken):
+        super().__init__(age, fur_color)
+        self.language_spoken = language_spoken
+
+    def speak(self):
+        # lógica de fala
+        pass
+```
+Esse é o padrão de herança limpa e simples no Python — claro, direto e fácil de manter.
